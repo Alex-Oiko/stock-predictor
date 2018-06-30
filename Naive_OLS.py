@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from sklearn import svm
 from sklearn import linear_model
+from sklearn.metrics import mean_squared_error
+
 
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
@@ -16,7 +18,7 @@ nyse_one_year_close = 11812.20
 
 nyse_performance = math.log(nyse_previous_close/nyse_one_year_close)
 
-print(nyse_performance)
+# print(nyse_performance)
 
 df = df.infer_objects()
 df['last_price'] = df['last_price'].astype('float')
@@ -34,7 +36,8 @@ df.dropna()     # need to dropnan else can't model
 
 cr = normalize_data(df['cash_ratio'],min(df['cash_ratio']),max(df['cash_ratio']))
 
-
+# set random seed for folding
+np.random.seed(2018)
 df['fold'] = np.random.uniform(1,10,len(df))
 
 id_train = np.where(df['fold']<=6.5)[0]
@@ -53,19 +56,42 @@ y = df['over/under-perfomance']
 
 
 
-linreg = linear_model.LinearRegression(fit_intercept=True)
-print(y.dropna)
 
-X_train = X[id_train]
-X_train = X_train.dropna
 
-y_train = y[id_train]
-y_train = y_train.dropna
 
+## Prepare train data set, droping Nan
+X_train = X.iloc[id_train]
+X_train = X_train.dropna()
+
+
+y_train = y.iloc[id_train]
+y_train = y_train.dropna()
+
+## Fit Linear Regression OLS to train set
+linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
 linreg.fit(X_train, y_train)
 linreg.get_params()
-y_test = linreg.predict(X[id_test])
-SST = np.sum((y_test-y[id_test])**2)
+
+
+## Prepare test data set, droping Nan
+X_test = X.iloc[id_test]
+X_test = X_test.dropna()
+
+y_test_true = y.iloc[id_test]
+y_test_true = y_test_true.dropna()
+
+
+## Predicting from X_test set, calculate MSE score
+y_test_from_linreg = linreg.predict(X_test)
+print(mean_squared_error(y_test_true,y_test_from_linreg))
+
+##  MSE score without intercept, 0.6015010280065605
+##  MSE score with intercept, 0.2609995959038271
+
+
+
+# SST = np.sum((y_test-y[id_test])**2)
+# print(SST)
 
 
 # clf = svm.SVC(kernel="linear")
