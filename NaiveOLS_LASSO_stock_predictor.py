@@ -6,6 +6,7 @@ from sklearn import svm
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import Lasso
+import fn_helpers
 
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
@@ -78,15 +79,15 @@ y_test_true = y_test_true.dropna()
 
 ##TODO Naive OLS Regression
 
-## Fit Linear Regression OLS to train set
-linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
-linreg.fit(X_train, y_train)
-linreg.get_params()
-
-
-## Predicting from X_test set, calculate MSE score
-y_test_from_linreg = linreg.predict(X_test)
-print(mean_squared_error(y_test_true,y_test_from_linreg))
+# ## Fit Linear Regression OLS to train set
+# linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
+# linreg.fit(X_train, y_train)
+# linreg.get_params()
+#
+#
+# ## Predicting from X_test set, calculate MSE score
+# y_test_from_linreg = linreg.predict(X_test)
+# print(mean_squared_error(y_test_true,y_test_from_linreg))
 
 ##  MSE score without intercept, 0.6015010280065605
 ##  MSE score with intercept, 0.2609995959038271
@@ -95,11 +96,20 @@ print(mean_squared_error(y_test_true,y_test_from_linreg))
 
 ###TODO LASSO Regression
 
-for a in range(0,1e-3, 1e-10):
+MSE_LASSO_models =[]
+
+for a in np.arange(0,1e-3, 1e-10):
     Lassi = Lasso(alpha = a)
     Lassi.fit(X_train, y_train)
+    # Lasso.get_params()
+
+    ## Predict from test set
+    y_test_from_LASSO = Lassi.predict(X_test)
+    mse = mean_squared_error(y_test_true,y_test_from_LASSO)
+    MSE_LASSO_models.append(mse)
 
 
+print(MSE_LASSO_models)
 
 
 
