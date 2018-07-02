@@ -5,6 +5,7 @@ from sklearn.preprocessing import normalize
 from sklearn import svm
 import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_decision_regions
+from mpl_toolkits.mplot3d import Axes3D
 
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
@@ -43,21 +44,25 @@ n_train = len(id_train)
 n_val = len(id_val)
 n_test = len(id_test)
 
-
 X = df[['cash_ratio','return_to_equity']]#'price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]
 y = df['over/under-perfomance']
 
-clf = svm.SVC(kernel="linear")
-clf.fit(X.iloc[id_train],y.iloc[id_train])
-train_pred = clf.predict(X.iloc[id_train])
-val_pred = clf.predict(X.iloc[id_val])
-test_pred = clf.predict(X.iloc[id_test])
+Cs = np.arange(0.01,5,0.01)
+gammas = np.arange(0.01,5,0.01)
 
-for (intercept, coef) in zip(clf.intercept_, clf.coef_):
-    s = "y = {0:.3f}".format(intercept)
-    for (i, c) in enumerate(coef):
-        s += " + {0:.3f} * x{1}".format(c, i)
+print(Cs)
+print(gammas)
 
-    print(s)
+for c in Cs:
+    for gamma in gammas:
 
-print(test_pred)
+        clf = svm.SVC(kernel="linear",C=c, gamma=gamma)
+        clf.fit(X.iloc[id_train],y.iloc[id_train])
+        train_pred = clf.predict(X.iloc[id_train])
+        print(sum(train_pred != 0))
+#val_pred = clf.predict(X.iloc[id_val])
+#test_pred = clf.predict(X.iloc[id_test])
+
+
+
+
