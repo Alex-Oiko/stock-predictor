@@ -6,6 +6,7 @@ from sklearn import svm
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
 import fn_helpers
 import matplotlib.pyplot as plt
 
@@ -69,6 +70,18 @@ X_train = X_train.dropna()
 y_train = y.iloc[id_train]
 y_train = y_train.dropna()
 
+
+
+## Prepare validation data set
+X_val = X.iloc[id_val]
+X_val = X_val.dropna()
+
+
+y_val_true = y.iloc[id_val]
+y_val_true = y_val_true.dropna()
+
+
+
 ## Prepare test data set, droping Nan
 X_test = X.iloc[id_test]
 X_test = X_test.dropna()
@@ -80,49 +93,92 @@ y_test_true = y_test_true.dropna()
 
 ##TODO Naive OLS Regression
 
-# ## Fit Linear Regression OLS to train set
-# linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
-# linreg.fit(X_train, y_train)
-# linreg.get_params()
-#
-#
-# ## Predicting from X_test set, calculate MSE score
-# y_test_from_linreg = linreg.predict(X_test)
-# print(mean_squared_error(y_test_true,y_test_from_linreg))
-
-##  MSE score without intercept, 0.6015010280065605
-##  MSE score with intercept, 0.2609995959038271
+## Fit Linear Regression OLS to train set
+linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
+linreg.fit(X_train, y_train)
+linreg.get_params()
 
 
+## Predicting from X_test set, calculate MSE score
+y_test_from_linreg = linreg.predict(X_test)
+MSE_linear = mean_squared_error(y_test_true,y_test_from_linreg)
 
-###TODO LASSO Regression
+#  MSE score without intercept, 0.6015010280065605
+#  MSE score with intercept, 0.2609995959038271
 
-MSE_LASSO_models =[]
 
-for a in np.arange(0,1e-3, 1e-8):
-    Lassi = Lasso(alpha = a)
+
+###TODO LASSO Regression and Ridge Regression
+
+MSE_LASSO_models_train =[]
+MSE_Ridge_models_train =[]
+MSE_LASSO_models_val =[]
+MSE_Ridge_models_val =[]
+
+
+x_axis_interval = np.arange(0,0.7, 1e-6)
+
+## finding optimal lambda for the least MSE
+for a in x_axis_interval:
+    Lassi = Lasso(alpha =a)
+    Rachel = Ridge(alpha=a)
     Lassi.fit(X_train, y_train)
+    Rachel.fit(X_train, y_train)
     # Lasso.get_params()
 
-    ## Predict from test set
-    y_test_from_LASSO = Lassi.predict(X_test)
-    mse = mean_squared_error(y_test_true,y_test_from_LASSO)
-    MSE_LASSO_models.append(mse)
+    ## Predict from train and val set
+    y_train_from_LASSO = Lassi.predict(X_train)
+    y_train_from_Ridge = Rachel.predict(X_train)
 
+    y_val_from_LASSO = Lassi.predict(X_val)
+    y_val_from_Ridge = Rachel.predict(X_val)
 
-plt.plot(np.arange(0,1e-3, 1e-8),MSE_LASSO_models)
+    mse_LASSO_train = mean_squared_error(y_train,y_train_from_LASSO)
+    MSE_LASSO_models_train.append(mse_LASSO_train)
+
+    mse_LASSO_val = mean_squared_error(y_val_true, y_val_from_LASSO)
+    MSE_LASSO_models_val.append(mse_LASSO_val)
+
+    mse_Ridge_train = mean_squared_error(y_train, y_train_from_Ridge)
+    MSE_Ridge_models_train.append(mse_Ridge_train)
+
+    mse_Ridge_val = mean_squared_error(y_val_true, y_val_from_Ridge)
+    MSE_Ridge_models_val.append(mse_Ridge_val)
+
+plt.scatter(x_axis_interval,MSE_LASSO_models_train, label="LASSO train", s=0.3)
+plt.scatter(x_axis_interval,MSE_LASSO_models_val, label="LASSO val", s=0.3)
+plt.scatter(x_axis_interval,MSE_Ridge_models_train, label="Ridge train", s=0.3)
+plt.scatter(x_axis_interval,MSE_Ridge_models_val, label="Ridge val", s=0.3)
+
 plt.xlabel('tuning parameter lambda')
-plt.ylabel('MSE')
+plt.ylabel('MSE of train and val data fitting')
+plt.legend()
 plt.show()
 
-a_range = np.arange(0,1e-3, 1e-12)
-opt_a =a_range[MSE_LASSO_models.index(min(MSE_LASSO_models))]
+a_range = x_axis_interval
 
-## optimal model with optimal lambda/ alpha
 
-print(opt_a)
-Lassi_opt = Lasso(alpha= opt_a)
-Lassi_opt.fit(X_train, y_train)
+opt_lambda_LASSO = a_range[MSE_LASSO_models_val.index(min(MSE_LASSO_models_val))]
+opt_lambda_Ridge = a_range[MSE_Ridge_models_val.index(min(MSE_Ridge_models_val))]
+
+## predicting test data set with optimal lambda/ alpha
+
+Lassi_opt = Lasso(alpha=opt_lambda_LASSO)
+y_test_from_Lassi = Lassi_opt.predict(X_test)
+test_MSE_Lassi = mean_squared_error(y_test_true, y_test_from_Lassi)
+
+
+Rachel_opt = Ridge(alpha=opt_lambda_Ridge)
+y_test_from_Rachel = Rachel_opt.predict(X_test)
+test_MSE_Rachel = mean_squared_error(y_test_true, y_test_from_Rachel)
+
+
+
+print("optimal lambda/ tuning parameters for LASSO:", opt_lambda_LASSO,"\n","optimal lambda/ tuning parameters for Ridge:", opt_lambda_Ridge)
+
+
+print("MSE Linear of testing:", MSE_linear,"\n", "MSE LASSO of testing", test_MSE_Rachel,"\n", "MSE Ridge of testing", test_MSE_Rachel)
+
 
 
 
