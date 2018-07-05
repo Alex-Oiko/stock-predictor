@@ -7,6 +7,7 @@ from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import Lasso
 import fn_helpers
+import matplotlib.pyplot as plt
 
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
@@ -98,7 +99,7 @@ y_test_true = y_test_true.dropna()
 
 MSE_LASSO_models =[]
 
-for a in np.arange(0,1e-3, 1e-10):
+for a in np.arange(0,1e-3, 1e-8):
     Lassi = Lasso(alpha = a)
     Lassi.fit(X_train, y_train)
     # Lasso.get_params()
@@ -109,7 +110,19 @@ for a in np.arange(0,1e-3, 1e-10):
     MSE_LASSO_models.append(mse)
 
 
-print(MSE_LASSO_models)
+plt.plot(np.arange(0,1e-3, 1e-8),MSE_LASSO_models)
+plt.xlabel('tuning parameter lambda')
+plt.ylabel('MSE')
+plt.show()
+
+a_range = np.arange(0,1e-3, 1e-12)
+opt_a =a_range[MSE_LASSO_models.index(min(MSE_LASSO_models))]
+
+## optimal model with optimal lambda/ alpha
+
+print(opt_a)
+Lassi_opt = Lasso(alpha= opt_a)
+Lassi_opt.fit(X_train, y_train)
 
 
 
