@@ -89,8 +89,9 @@ X_test = X_test.dropna()
 y_test_true = y.iloc[id_test]
 y_test_true = y_test_true.dropna()
 
-
-
+##TODO Randomly picking, see if the data set is balanced or not
+error = 1 - np.divide(np.sum(y_test_true),len(y_test_true))
+print('Random guessing error:', error)
 ##TODO Naive OLS Regression
 
 ## Fit Linear Regression OLS to train set
@@ -164,11 +165,13 @@ opt_lambda_Ridge = a_range[MSE_Ridge_models_val.index(min(MSE_Ridge_models_val))
 ## predicting test data set with optimal lambda/ alpha
 
 Lassi_opt = Lasso(alpha=opt_lambda_LASSO)
+Lassi_opt.fit(X_val, y_val_true)
 y_test_from_Lassi = Lassi_opt.predict(X_test)
 test_MSE_Lassi = mean_squared_error(y_test_true, y_test_from_Lassi)
 
 
 Rachel_opt = Ridge(alpha=opt_lambda_Ridge)
+Rachel_opt.fit(X_val, y_val_true)
 y_test_from_Rachel = Rachel_opt.predict(X_test)
 test_MSE_Rachel = mean_squared_error(y_test_true, y_test_from_Rachel)
 
