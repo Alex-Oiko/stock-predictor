@@ -10,7 +10,7 @@ from sklearn.metrics import mean_squared_error
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
 
-df = pd.read_csv("companylist1.csv")
+df = pd.read_csv("/resources/companylist.csv")
 df = df.dropna()
 
 nyse_previous_close = 12412.07
@@ -79,6 +79,7 @@ X_test = X_test.dropna()
 
 y_test_true = y.iloc[id_test]
 y_test_true = y_test_true.dropna()
+
 
 
 ## Predicting from X_test set, calculate MSE score
