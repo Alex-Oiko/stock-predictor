@@ -9,6 +9,8 @@ from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
 import fn_helpers
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
 
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
@@ -92,64 +94,111 @@ y_test_true = y_test_true.dropna()
 ##TODO Randomly picking, see if the data set is balanced or not
 error = 1 - np.divide(np.sum(y_test_true),len(y_test_true))
 print('Random guessing error:', error)
-##TODO Naive OLS Regression
-
-## Fit Linear Regression OLS to train set
-linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
-linreg.fit(X_train, y_train)
-linreg.get_params()
-
-
-## Predicting from X_test set, calculate MSE score
-y_test_from_linreg = linreg.predict(X_test)
-MSE_linear = mean_squared_error(y_test_true,y_test_from_linreg)
-
-#  MSE score without intercept, 0.6015010280065605
-#  MSE score with intercept, 0.2609995959038271
 
 
 
-###TODO LASSO Regression and Ridge Regression
+###TODO Naive OLS, LASSO Regression and Ridge Regression
 
-MSE_LASSO_models_train =[]
-MSE_Ridge_models_train =[]
-MSE_LASSO_models_val =[]
-MSE_Ridge_models_val =[]
+def model_OLS(data_X_train, data_y_train, data_X_val, data_y_val_true, data_X_test):
+    linreg = linear_model.LinearRegression(fit_intercept=True)  # can change with or without intercept
+    linreg.fit(data_X_train, data_y_train)
+    linreg.get_params()
+    y_train_from_OLS = linreg.predict(data_X_train)
+
+    linreg.fit(data_X_val,data_y_val_true)
+    y_test_from_OLS = linreg.predict(data_X_test)
+    return y_train_from_OLS, y_test_from_OLS
+
+def model_Lassi(data_X_train, data_y_train, a, data_X_val):
+    Lassi = Lasso(alpha=a)
+    Lassi.fit(data_X_train, data_y_train)
+    y_train_from_LASSO = Lassi.predict(data_X_train)
+
+    y_val_from_LASSO = Lassi.predict(data_X_val)
+
+    return y_train_from_LASSO, y_val_from_LASSO
 
 
-x_axis_interval = np.arange(0,0.7, 1e-6)
-
-## finding optimal lambda for the least MSE
-for a in x_axis_interval:
-    Lassi = Lasso(alpha =a)
+def model_Rachel(data_X_train, data_y_train, a, data_X_val):
     Rachel = Ridge(alpha=a)
-    Lassi.fit(X_train, y_train)
-    Rachel.fit(X_train, y_train)
-    # Lasso.get_params()
+    Rachel.fit(data_X_train, data_y_train)
+    y_train_from_Ridge = Rachel.predict(data_X_train)
 
-    ## Predict from train and val set
-    y_train_from_LASSO = Lassi.predict(X_train)
-    y_train_from_Ridge = Rachel.predict(X_train)
+    y_val_from_Ridge = Rachel.predict(data_X_val)
 
-    y_val_from_LASSO = Lassi.predict(X_val)
-    y_val_from_Ridge = Rachel.predict(X_val)
+    return y_train_from_Ridge, y_val_from_Ridge
 
-    mse_LASSO_train = mean_squared_error(y_train,y_train_from_LASSO)
-    MSE_LASSO_models_train.append(mse_LASSO_train)
 
-    mse_LASSO_val = mean_squared_error(y_val_true, y_val_from_LASSO)
-    MSE_LASSO_models_val.append(mse_LASSO_val)
+def confusion_matrix_for_reg(predict, real):
+    predict = np.array(np.round(predict))
+    real = np.array(real)
 
-    mse_Ridge_train = mean_squared_error(y_train, y_train_from_Ridge)
-    MSE_Ridge_models_train.append(mse_Ridge_train)
+    TP = np.sum(np.where((predict == real) & (predict == 1)))
+    FP = np.sum(np.where((predict != real) & (predict == 1)))
+    TN = np.sum(np.where((predict == real) & (predict == 0)))
+    FN = np.sum(np.where((predict != real) & (predict == 0)))
 
-    mse_Ridge_val = mean_squared_error(y_val_true, y_val_from_Ridge)
-    MSE_Ridge_models_val.append(mse_Ridge_val)
+    conf_matrix = [[TN, FP], [FN, TP]]
 
-plt.scatter(x_axis_interval,MSE_LASSO_models_train, label="LASSO train", s=0.3)
-plt.scatter(x_axis_interval,MSE_LASSO_models_val, label="LASSO val", s=0.3)
-plt.scatter(x_axis_interval,MSE_Ridge_models_train, label="Ridge train", s=0.3)
-plt.scatter(x_axis_interval,MSE_Ridge_models_val, label="Ridge val", s=0.3)
+    return conf_matrix
+
+
+print('ans', confusion_matrix_for_reg([1,0,0,0],[1,0,0,0]))
+
+## TODO Naive OLS
+
+y_train_from_OLS, y_test_from_OLS = model_OLS(X_train, y_train, X_val, y_val_true, X_test)
+
+conf_matrix_train_from_OLS = confusion_matrix_for_reg(y_train_from_OLS, y_train)
+
+conf_matrix_test_from_OLS = confusion_matrix_for_reg(y_test_from_OLS, y_test_true)
+
+
+## TODO Optimizing LASSO and Ridge Lambda
+
+## initialising
+x_axis_interval = np.arange(0,0.7, 1e-3)
+
+
+conf_matrix_train_from_LASSO = []
+FP_train_LASSO =[]
+
+conf_matrix_val_from_LASSO = []
+FP_val_LASSO =[]
+
+conf_matrix_train_from_Ridge = []
+FP_train_Ridge =[]
+
+conf_matrix_val_from_Ridge =[]
+FP_val_Ridge = []
+
+
+## finding optimal lambda for the least amount of False Positive
+for a in x_axis_interval:
+
+    y_train_from_LASSO, y_val_from_LASSO = model_Lassi(X_train, y_train, a, X_val)
+
+    conf_matrix_train_from_LASSO.append(confusion_matrix_for_reg(y_train_from_LASSO, y_train))
+    FP_train_LASSO.append(confusion_matrix_for_reg(y_train_from_LASSO, y_train)[1][0])
+
+
+    conf_matrix_val_from_LASSO.append(confusion_matrix_for_reg(y_val_from_LASSO, y_val_true))
+    FP_val_LASSO.append(confusion_matrix_for_reg(y_val_from_LASSO, y_val_true)[1][0])
+
+    y_train_from_Ridge, y_val_from_Ridge = model_Rachel(X_train, y_train, a, X_val)
+
+    conf_matrix_train_from_Ridge.append(confusion_matrix_for_reg(y_train_from_Ridge, y_train))
+    FP_train_Ridge.append(confusion_matrix_for_reg(y_train_from_Ridge, y_train)[1][0])
+
+    conf_matrix_val_from_Ridge.append(confusion_matrix_for_reg(y_val_from_Ridge, y_val_true))
+    FP_val_Ridge.append(confusion_matrix_for_reg(y_val_from_Ridge, y_val_true)[1][0])
+
+
+# Plotting False positives for each lambda
+plt.scatter(x_axis_interval,FP_train_LASSO, label="LASSO train", s=0.3)
+plt.scatter(x_axis_interval, FP_val_LASSO, label="LASSO val", s=0.3)
+plt.scatter(x_axis_interval,FP_train_Ridge, label="Ridge train", s=0.3)
+plt.scatter(x_axis_interval,FP_val_Ridge, label="Ridge val", s=0.3)
 
 plt.xlabel('tuning parameter lambda')
 plt.ylabel('MSE of train and val data fitting')
@@ -158,29 +207,35 @@ plt.show()
 
 a_range = x_axis_interval
 
+## Only optimize for minimum FP, long only fund
+opt_lambda_LASSO = a_range[FP_val_LASSO.index(min(FP_val_LASSO))]
+opt_lambda_Ridge = a_range[FP_val_Ridge.index(min(FP_val_Ridge))]
 
-opt_lambda_LASSO = a_range[MSE_LASSO_models_val.index(min(MSE_LASSO_models_val))]
-opt_lambda_Ridge = a_range[MSE_Ridge_models_val.index(min(MSE_Ridge_models_val))]
-
-## predicting test data set with optimal lambda/ alpha
+## predicting test data set with optimal lambda/ alpha, returning confusion matrix
 
 Lassi_opt = Lasso(alpha=opt_lambda_LASSO)
 Lassi_opt.fit(X_val, y_val_true)
 y_test_from_Lassi = Lassi_opt.predict(X_test)
-test_MSE_Lassi = mean_squared_error(y_test_true, y_test_from_Lassi)
+
+conf_matrix_test_Lassi = confusion_matrix_for_reg(y_test_from_Lassi,y_test_true)
 
 
 Rachel_opt = Ridge(alpha=opt_lambda_Ridge)
 Rachel_opt.fit(X_val, y_val_true)
 y_test_from_Rachel = Rachel_opt.predict(X_test)
-test_MSE_Rachel = mean_squared_error(y_test_true, y_test_from_Rachel)
+
+conf_matrix_test_Rachel = confusion_matrix_for_reg(y_test_from_Rachel, y_test_true)
+
 
 
 
 print("optimal lambda/ tuning parameters for LASSO:", opt_lambda_LASSO,"\n","optimal lambda/ tuning parameters for Ridge:", opt_lambda_Ridge)
 
 
-print("MSE Linear of testing:", MSE_linear,"\n", "MSE LASSO of testing", test_MSE_Rachel,"\n", "MSE Ridge of testing", test_MSE_Rachel)
+print("FP OLS of training:", conf_matrix_train_from_OLS,"\n",
+      "FP OLS of testing:", conf_matrix_test_from_OLS,"\n",
+      "FP LASSO of testing", conf_matrix_test_Lassi,"\n",
+      "MSE Ridge of testing", conf_matrix_test_Rachel)
 
 
 
