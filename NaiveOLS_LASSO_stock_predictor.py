@@ -7,7 +7,6 @@ from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
-import fn_helpers
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
@@ -133,17 +132,23 @@ def confusion_matrix_for_reg(predict, real):
     predict = np.array(np.round(predict))
     real = np.array(real)
 
-    TP = np.sum(np.where((predict == real) & (predict == 1)))
-    FP = np.sum(np.where((predict != real) & (predict == 1)))
-    TN = np.sum(np.where((predict == real) & (predict == 0)))
-    FN = np.sum(np.where((predict != real) & (predict == 0)))
+    ## use AND gate to check for TP
+    TP = np.sum(np.logical_and(predict, real))
+    ## sum of all 1s in predict - TP = FP
+    FP = np.sum(predict ==1) - TP
+
+
+    ## firat flip predict and real 1 and 0s, and use the same AND gate to check for TN
+    TN = np.sum(np.logical_and(np.logical_not(predict), np.logical_not(real)))
+    FN = np.sum(predict ==0) - TN
+
+
 
     conf_matrix = [[TN, FP], [FN, TP]]
 
+
     return conf_matrix
 
-
-print('ans', confusion_matrix_for_reg([1,0,0,0],[1,0,0,0]))
 
 ## TODO Naive OLS
 
@@ -201,7 +206,7 @@ plt.scatter(x_axis_interval,FP_train_Ridge, label="Ridge train", s=0.3)
 plt.scatter(x_axis_interval,FP_val_Ridge, label="Ridge val", s=0.3)
 
 plt.xlabel('tuning parameter lambda')
-plt.ylabel('MSE of train and val data fitting')
+plt.ylabel('FP of train and val data fitting')
 plt.legend()
 plt.show()
 
