@@ -91,8 +91,12 @@ y_test_true = y.iloc[id_test]
 y_test_true = y_test_true.dropna()
 
 ##TODO Randomly picking, see if the data set is balanced or not
-error = 1 - np.divide(np.sum(y_test_true),len(y_test_true))
-print('Random guessing error:', error)
+
+
+np.random.seed(2018)
+y_train_from_random = np.random.uniform(1,0,len(y_train))
+
+y_test_from_random = np.random.uniform(1,0,len(y_test_true))
 
 
 
@@ -109,7 +113,7 @@ def model_OLS(data_X_train, data_y_train, data_X_val, data_y_val_true, data_X_te
     return y_train_from_OLS, y_test_from_OLS
 
 def model_Lassi(data_X_train, data_y_train, a, data_X_val):
-    Lassi = Lasso(alpha=a)
+    Lassi = Lasso(alpha=a, tol=1e-5)
     Lassi.fit(data_X_train, data_y_train)
     y_train_from_LASSO = Lassi.predict(data_X_train)
 
@@ -119,7 +123,7 @@ def model_Lassi(data_X_train, data_y_train, a, data_X_val):
 
 
 def model_Rachel(data_X_train, data_y_train, a, data_X_val):
-    Rachel = Ridge(alpha=a)
+    Rachel = Ridge(alpha=a, tol=1e-5)
     Rachel.fit(data_X_train, data_y_train)
     y_train_from_Ridge = Rachel.predict(data_X_train)
 
@@ -218,14 +222,14 @@ opt_lambda_Ridge = a_range[FP_val_Ridge.index(min(FP_val_Ridge))]
 
 ## predicting test data set with optimal lambda/ alpha, returning confusion matrix
 
-Lassi_opt = Lasso(alpha=opt_lambda_LASSO)
+Lassi_opt = Lasso(alpha=opt_lambda_LASSO, tol=1e-5)
 Lassi_opt.fit(X_val, y_val_true)
 y_test_from_Lassi = Lassi_opt.predict(X_test)
 
 conf_matrix_test_Lassi = confusion_matrix_for_reg(y_test_from_Lassi,y_test_true)
 
 
-Rachel_opt = Ridge(alpha=opt_lambda_Ridge)
+Rachel_opt = Ridge(alpha=opt_lambda_Ridge, tol=1e-5)
 Rachel_opt.fit(X_val, y_val_true)
 y_test_from_Rachel = Rachel_opt.predict(X_test)
 
@@ -237,13 +241,30 @@ conf_matrix_test_Rachel = confusion_matrix_for_reg(y_test_from_Rachel, y_test_tr
 print("optimal lambda/ tuning parameters for LASSO:", opt_lambda_LASSO,"\n","optimal lambda/ tuning parameters for Ridge:", opt_lambda_Ridge)
 
 
-print("FP OLS of training:", conf_matrix_train_from_OLS,"\n",
-      "FP OLS of testing:", conf_matrix_test_from_OLS,"\n",
-      "FP LASSO of testing", conf_matrix_test_Lassi,"\n",
-      "MSE Ridge of testing", conf_matrix_test_Rachel)
+print("OLS's confusion matrix of training:", conf_matrix_train_from_OLS,"\n",
+      "OLS's confusion matrix of testing:", conf_matrix_test_from_OLS,"\n",
+      "LASSO's confusion matrix of testing", conf_matrix_test_Lassi,"\n",
+      "Ridge's confusion matrix of testing", conf_matrix_test_Rachel)
 
 
+## TODO Performance metric, calculating precision
 
+## first get confusion matrix of randomly picking
+
+conf_matrix_train_from_random = confusion_matrix_for_reg(y_train_from_random, y_train)
+conf_matrix_test_from_random = confusion_matrix_for_reg(y_test_from_random, y_test_true)
+
+conf_matrix_list = [conf_matrix_train_from_random, conf_matrix_test_from_random,
+                    conf_matrix_train_from_OLS, conf_matrix_test_from_OLS,
+                    conf_matrix_test_Lassi, conf_matrix_test_Rachel]
+
+
+prec_list = []
+
+for i in conf_matrix_list:
+    prec_list.append(i[1][1]/ (i[0][1] + i[1][1]))
+
+print(prec_list)
 
 # SST = np.sum((y_test-y[id_test])**2)
 # print(SST)
