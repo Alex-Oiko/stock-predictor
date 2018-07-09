@@ -71,10 +71,6 @@ y = df['status']
 
 
 
-
-
-
-
 ## Prepare train data set, droping Nan
 X_train = X.iloc[id_train]
 X_train = X_train.dropna()
@@ -146,12 +142,15 @@ def model_Rachel(data_X_train, data_y_train, a, data_X_val):
 
 def confusion_matrix_for_reg(predict, real):
     predict = np.array(np.round(predict))
+    predict = predict.clip(min=0, max=1)
     real = np.array(real)
+
 
     ## use AND gate to check for TP
     TP = np.sum(np.logical_and(predict, real))
     ## sum of all 1s in predict - TP = FP
     FP = np.sum(predict ==1) - TP
+
 
 
     ## firat flip predict and real 1 and 0s, and use the same AND gate to check for TN
@@ -182,16 +181,16 @@ x_axis_interval = np.arange(0,0.7, 1e-3)
 
 
 conf_matrix_train_from_LASSO = []
-FP_train_LASSO =[]
+prec_train_LASSO =[]
 
 conf_matrix_val_from_LASSO = []
-FP_val_LASSO =[]
+prec_val_LASSO =[]
 
 conf_matrix_train_from_Ridge = []
-FP_train_Ridge =[]
+prec_train_Ridge =[]
 
 conf_matrix_val_from_Ridge =[]
-FP_val_Ridge = []
+prec_val_Ridge = []
 
 
 ## finding optimal lambda for the least amount of False Positive
@@ -200,37 +199,50 @@ for a in x_axis_interval:
     y_train_from_LASSO, y_val_from_LASSO = model_Lassi(X_train, y_train, a, X_val)
 
     conf_matrix_train_from_LASSO.append(confusion_matrix_for_reg(y_train_from_LASSO, y_train))
-    FP_train_LASSO.append(confusion_matrix_for_reg(y_train_from_LASSO, y_train)[1][0])
-
+    prec_train_LASSO.append(confusion_matrix_for_reg(y_train_from_LASSO, y_train)[1][1] /
+                            (confusion_matrix_for_reg(y_train_from_LASSO, y_train)[1][1] +
+                             confusion_matrix_for_reg(y_train_from_LASSO, y_train)[0][1]))
 
     conf_matrix_val_from_LASSO.append(confusion_matrix_for_reg(y_val_from_LASSO, y_val_true))
-    FP_val_LASSO.append(confusion_matrix_for_reg(y_val_from_LASSO, y_val_true)[1][0])
+    prec_val_LASSO.append(confusion_matrix_for_reg(y_val_from_LASSO, y_val_true)[1][1] /
+                          (confusion_matrix_for_reg(y_val_from_LASSO, y_val_true)[1][1] +
+                           confusion_matrix_for_reg(y_val_from_LASSO, y_val_true)[0][1]))
+
+    # print(confusion_matrix_for_reg(y_val_from_LASSO, y_val_true))
+
 
     y_train_from_Ridge, y_val_from_Ridge = model_Rachel(X_train, y_train, a, X_val)
 
     conf_matrix_train_from_Ridge.append(confusion_matrix_for_reg(y_train_from_Ridge, y_train))
-    FP_train_Ridge.append(confusion_matrix_for_reg(y_train_from_Ridge, y_train)[1][0])
+    prec_train_Ridge.append(confusion_matrix_for_reg(y_train_from_Ridge, y_train)[1][1] /
+                            (confusion_matrix_for_reg(y_train_from_Ridge, y_train)[1][1] +
+                             confusion_matrix_for_reg(y_train_from_Ridge, y_train)[0][1]))
+
 
     conf_matrix_val_from_Ridge.append(confusion_matrix_for_reg(y_val_from_Ridge, y_val_true))
-    FP_val_Ridge.append(confusion_matrix_for_reg(y_val_from_Ridge, y_val_true)[1][0])
+    prec_val_Ridge.append(confusion_matrix_for_reg(y_val_from_Ridge, y_val_true)[1][1] /
+                          (confusion_matrix_for_reg(y_train_from_Ridge, y_train)[1][1] +
+                           confusion_matrix_for_reg(y_train_from_Ridge, y_train)[0][1]))
 
 
-# Plotting False positives for each lambda
-plt.scatter(x_axis_interval,FP_train_LASSO, label="LASSO train", s=0.3)
-plt.scatter(x_axis_interval, FP_val_LASSO, label="LASSO val", s=0.3)
-plt.scatter(x_axis_interval,FP_train_Ridge, label="Ridge train", s=0.3)
-plt.scatter(x_axis_interval,FP_val_Ridge, label="Ridge val", s=0.3)
+# Plotting the precisions across lambdas
+plt.scatter(x_axis_interval,prec_train_LASSO, label="LASSO train", s=0.3)
+plt.scatter(x_axis_interval, prec_val_LASSO, label="LASSO val", s=0.3)
+plt.scatter(x_axis_interval,prec_train_Ridge, label="Ridge train", s=0.3)
+plt.scatter(x_axis_interval,prec_val_Ridge, label="Ridge val", s=0.3)
 
 plt.xlabel('tuning parameter lambda')
-plt.ylabel('FP of train and val data fitting')
+plt.ylabel('precision of train and val data fitting')
 plt.legend()
 plt.show()
+
+
 
 a_range = x_axis_interval
 
 ## Only optimize for minimum FP, long only fund
-opt_lambda_LASSO = a_range[FP_val_LASSO.index(min(FP_val_LASSO))]
-opt_lambda_Ridge = a_range[FP_val_Ridge.index(min(FP_val_Ridge))]
+opt_lambda_LASSO = a_range[prec_val_LASSO.index(max(prec_val_LASSO))]
+opt_lambda_Ridge = a_range[prec_val_Ridge.index(max(prec_val_Ridge))]
 
 ## predicting test data set with optimal lambda/ alpha, returning confusion matrix
 
