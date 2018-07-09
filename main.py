@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-df = pd.read_csv("./resources/companylist.csv")
+df = pd.read_csv("./resources/2018.csv")
 
 df = df.dropna()
 df = df.reset_index(drop=True)

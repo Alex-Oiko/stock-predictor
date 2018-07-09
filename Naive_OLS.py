@@ -10,7 +10,7 @@ from sklearn.metrics import mean_squared_error
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
 
-df = pd.read_csv("/resources/companylist.csv")
+df = pd.read_csv("/resources/2018.csv")
 df = df.dropna()
 
 nyse_previous_close = 12412.07
