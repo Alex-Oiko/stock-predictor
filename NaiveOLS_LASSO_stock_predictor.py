@@ -15,6 +15,7 @@ def normalize_data(x,min,max):
     return (x-min)/(max-min)
 
 df = pd.read_csv("./resources/2018.csv")
+# df = pd.read_csv("/Users/kingf.wong/Downloads/companylist2.csv") ## give better results
 df = df.dropna()
 
 nyse_previous_close = 12412.07
@@ -54,7 +55,7 @@ n_test = len(id_test)
 
 
 
-X = df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]#'price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]
+X = df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_ratio','debt_to_equity','eps','NYSE_NASDAQ']]#'price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]
 y = df['over/under-perfomance']
 
 
