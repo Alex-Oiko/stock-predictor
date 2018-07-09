@@ -3,71 +3,64 @@ import math
 import numpy as np
 from sklearn import svm
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import  confusion_matrix
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+
+def product_metrics(real, pred):
+    print("Non 0 results " + str(sum(real != 0)) + " ,0 results " + str(sum(pred == 0)))
+    C = confusion_matrix(real, pred)
+    tn, fp, fn, tp = C[0, 0], C[0, 1], C[1, 0], C[1, 1];
+    precision = float(tp) / float((tp + fp))
+    recall = float(tp) / float((tp + fn))
+    print("Precision " + str(precision) + " Recall " + str(recall))
 
 
 df = pd.read_csv("./resources/2018.csv")
 
 df = df.dropna()
 df = df.reset_index(drop=True)
-print(df.shape)
-#check if you could use the nasdaq close as well for the corresponding companies
+
 nyse_previous_close = 12412.07
 nyse_one_year_close = 11812.20
 
-nyse_performance = math.log(nyse_previous_close/nyse_one_year_close)
+nasdaq_previous_close = 7712.9502
+nasdaq_one_year_close = 6233.9502
 
-print(nyse_performance)
+nasdaq_begin_index = 977
+
+nyse_performance = math.log(nyse_previous_close/nyse_one_year_close)
+nasdaq_performance = math.log(nasdaq_previous_close/nasdaq_one_year_close)
 
 df = df.infer_objects()
 df['last_price'] = df['last_price'].astype('float')
-
 df['performance'] = np.log(df['last_price'] /df['previous_year_price'])
-df['over/under-perfomance'] = df['performance']>nyse_performance
-df['over/under-perfomance'] = df['over/under-perfomance'].astype('int')
-
+# status is under/overperformance
+df['status'] = 0
+nyse_performance = (df.loc[range(0,nasdaq_begin_index),'performance']>nyse_performance).astype('int')
+nasdaq_performance = (df.loc[range(nasdaq_begin_index,len(df)),'performance']>nasdaq_performance).astype('int')
+df['status'] = nyse_performance
+df.loc[nasdaq_begin_index:len(df),'status'] = nasdaq_performance
+df['status'] = df['status'].astype('int')
 
 X = df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]
-y = df['over/under-perfomance']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42,shuffle=True,stratify=y)
+y = df['status']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42,shuffle=True,stratify=y)
 
-
+print(X_train.shape)
+print(X_test.shape)
 clf = svm.SVC(kernel="linear")
 clf.fit(X_train,y_train)
-train_pred = clf.predict(X_train)
-print(sum(train_pred!=0))
-print(sum(train_pred==0))
-#print(clf.decision_function(X.iloc[id_train]))
 
-# for (intercept, coef) in zip(clf.intercept_, clf.coef_):
-#     s = "y = {0:.3f}".format(intercept)
-#     for (i, c) in enumerate(coef):
-#         s += " + {0:.3f} * x{1}".format(c, i)
-#
-#     print(s)
-#
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-#
-# n = 100
-#
-# # For each set of style and range settings, plot n random points in the box
-# # defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
-# xs = df['cash_ratio']
-# ys = df['return_to_equity']
-# zs = y
-# ax.scatter(xs, ys, zs)
-#
-# ax.set_xlabel('X Label')
-# ax.set_ylabel('Y Label')
-# ax.set_zlabel('Z Label')
-#
-# plt.show()
-#
-# #val_pred = clf.predict(X.iloc[id_val])
-# #test_pred = clf.predict(X.iloc[id_test])
-#
-#
-#
-#
+for (intercept, coef) in zip(clf.intercept_, clf.coef_):
+     s = "y = {0:.3f}".format(intercept)
+     for (i, c) in enumerate(coef):
+         s += " + {0:.3f} * x{1}".format(c, i)
+     print(s)
+
+train_pred = clf.predict(X_train)
+test_pred = clf.predict(X_test)
+
+print(product_metrics(y_train,train_pred))
+print(product_metrics(y_test,test_pred))

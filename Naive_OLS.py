@@ -10,13 +10,20 @@ from sklearn.metrics import mean_squared_error
 def normalize_data(x,min,max):
     return (x-min)/(max-min)
 
-df = pd.read_csv("/resources/2018.csv")
+df = pd.read_csv("./resources/2018.csv")
 df = df.dropna()
+df = df.reset_index(drop=True)
 
 nyse_previous_close = 12412.07
 nyse_one_year_close = 11812.20
 
+nasdaq_previous_close = 7712.9502
+nasdaq_one_year_close = 6233.9502
+
+nasdaq_begin_index = 977
+
 nyse_performance = math.log(nyse_previous_close/nyse_one_year_close)
+nasdaq_performance = math.log(nasdaq_previous_close/nasdaq_one_year_close)
 
 # print(nyse_performance)
 
@@ -26,8 +33,12 @@ df['last_price'] = df['last_price'].astype('float')
 #print(df.dtypes)
 
 df['performance'] = np.log(df['last_price'] /df['previous_year_price'])
-df['over/under-perfomance'] = df['performance']>nyse_performance
-df['over/under-perfomance'] = df['over/under-perfomance'].astype('int')
+df['status'] = 0
+nyse_performance = (df.loc[range(0,nasdaq_begin_index),'performance']>nyse_performance).astype('int')
+nasdaq_performance = (df.loc[range(nasdaq_begin_index,len(df)),'performance']>nasdaq_performance).astype('int')
+df['status'] = nyse_performance
+df.loc[nasdaq_begin_index:len(df),'status'] = nasdaq_performance
+df['status'] = df['status'].astype('int')
 
 #normalize data
 df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_ratio','debt_to_equity','eps']] = normalize(df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_ratio','debt_to_equity','eps']],axis=0, norm='max')
@@ -51,7 +62,7 @@ n_test = len(id_test)
 
 
 X = df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]#'price_to_book','pe','short_interest_ratio','debt_to_equity','eps']]
-y = df['over/under-perfomance']
+y = df['status']
 
 
 
