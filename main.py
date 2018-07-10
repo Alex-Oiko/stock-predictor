@@ -7,7 +7,7 @@ from sklearn.metrics import confusion_matrix
 
 
 def product_metrics(real, pred):
-    print("Non 0 results " + str(sum(pred != 0)) + " ,0 results " + str(sum(pred == 0)))
+    #print("Non 0 results " + str(sum(pred != 0)) + " ,0 results " + str(sum(pred == 0)))
     C = confusion_matrix(real, pred)
     tn, fp, fn, tp = C[0, 0], C[0, 1], C[1, 0], C[1, 1];
     try:
@@ -18,7 +18,7 @@ def product_metrics(real, pred):
         recall = float(tp) / float((tp + fn))
     except(ZeroDivisionError):
         recall = 0
-    print("Precision " + str(precision) + " Recall " + str(recall))
+    #print("Precision " + str(precision) + " Recall " + str(recall))
     return precision,recall
 
 def run_model(C,gamma,algo):
@@ -72,17 +72,18 @@ X = df[['cash_ratio','return_to_equity','price_to_book','pe','short_interest_rat
 y = df['status']
 
 
-gammas = [2**x for x in range(-15,15,2)]
-Cs = [2**x for x in range(-15,15,2)]
+gammas = [2**x for x in range(-10,10,2)]
+Cs = [2**x for x in range(-10,10,2)]
 algos = ['linear','rbf','sigmoid']
 seeds = range(10,100,10)
 
 counter = 0;
-for c in Cs:
-    for gamma in gammas:
-        for algo in algos:
-                results.iloc[counter] = run_model(c,gamma,algo)
-                counter = counter+1;
+for algo in algos:
+    for c in Cs:
+        for gamma in gammas:
+            results.iloc[counter] = run_model(c,gamma,algo)
+            print(results.iloc[counter])
+            counter = counter+1;
 
 results.to_csv('./resources/results.csv', sep=',')
 
