@@ -7,7 +7,7 @@ from sklearn.metrics import confusion_matrix
 
 
 def product_metrics(real, pred):
-    #print("Non 0 results " + str(sum(pred != 0)) + " ,0 results " + str(sum(pred == 0)))
+    print("Non 0 results " + str(sum(pred != 0)) + " ,0 results " + str(sum(pred == 0)))
     C = confusion_matrix(real, pred)
     tn, fp, fn, tp = C[0, 0], C[0, 1], C[1, 0], C[1, 1];
     try:
@@ -18,7 +18,7 @@ def product_metrics(real, pred):
         recall = float(tp) / float((tp + fn))
     except(ZeroDivisionError):
         recall = 0
-    #print("Precision " + str(precision) + " Recall " + str(recall))
+    print("Precision " + str(precision) + " Recall " + str(recall))
     return precision,recall
 
 def run_model(C,gamma,algo):
@@ -40,7 +40,7 @@ def run_model(C,gamma,algo):
 
 df = pd.read_csv("./resources/2018.csv")
 
-results = pd.DataFrame(columns=['C','gamma','algo','test_precision','test_recall','train_precision','train_recall'],index=range(1000000))
+results = pd.DataFrame(columns=['C','gamma','algo','test_precision','test_recall','train_precision','train_recall'],index=range(305))
 
 df = df.dropna()
 df = df.reset_index(drop=True)
@@ -77,13 +77,26 @@ Cs = [2**x for x in range(-10,10,2)]
 algos = ['linear','rbf','sigmoid']
 seeds = range(10,100,10)
 
-counter = 0;
-for algo in algos:
-    for c in Cs:
-        for gamma in gammas:
-            results.iloc[counter] = run_model(c,gamma,algo)
-            print(results.iloc[counter])
-            counter = counter+1;
+#counter = 0
+#for algo in algos:
+#    for c in Cs:
+#        for gamma in gammas:
+#            results.iloc[counter] = run_model(c,gamma,algo)
+#            print(results.iloc[counter])
+#            counter = counter+1;
 
-results.to_csv('./resources/results.csv', sep=',')
+#results.to_csv('./resources/results.csv', sep=',')
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=12, shuffle=True, stratify=y)
+clf = svm.SVC(kernel='rbf',C=4,gamma=1)
+clf.fit(X_train, y_train)
+
+train_pred = clf.predict(X_train)
+test_pred = clf.predict(X_test)
+
+train_precision, train_recall = product_metrics(y_train, train_pred)
+test_precision, test_recall = product_metrics(y_test, test_pred)
+
+print(train_precision,train_recall)
+print(test_precision,test_precision)
 
