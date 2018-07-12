@@ -237,4 +237,11 @@ for train_index, test_index in kf.split(X):
 
     superlist.append(F1_score_list)
 
-print(np.array(superlist))
+s = np.array(superlist)
+
+for arr in s:
+    for idx, val in enumerate(arr):
+        if math.isnan(val):
+            arr[idx] = 0
+
+print(s.mean(axis=0))

@@ -4,6 +4,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
 results = pd.read_csv("./resources/results.csv")
 
 linear = results.iloc[np.where(results['algo']=='linear')]
@@ -100,32 +102,32 @@ mpl.rcParams['legend.fontsize'] = 10
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-ax.scatter(linear['C'], linear['gamma'], linear['train_precision'], label='Train Precision')
-ax.scatter(linear['C'], linear['gamma'], linear['test_precision'], label='Test Precision')
+ax.scatter(linear['C'], linear['gamma'], linear['f1_train'], label='Train f1')
+ax.scatter(linear['C'], linear['gamma'], linear['f1_test'], label='Test f1')
 ax.legend()
 ax.set_title("Linear Kernel")
 ax.set_xlabel('C')
 ax.set_ylabel('gamma')
-ax.set_zlabel('Test Precision')
+ax.set_zlabel('F1 score')
 
 fig1 = plt.figure()
 ax1 = fig1.gca(projection='3d')
-ax1.scatter(rbf['C'], rbf['gamma'], rbf['train_precision'], label='Train Precision')
-ax1.scatter(rbf['C'], rbf['gamma'], rbf['test_precision'], label='Test Precision')
+ax1.scatter(rbf['C'], rbf['gamma'], rbf['f1_train'], label='Train f1')
+ax1.scatter(rbf['C'], rbf['gamma'], rbf['f1_test'], label='Test f1')
 ax1.legend()
 ax1.set_title("Rbf Kernel")
 ax1.set_xlabel('C')
 ax1.set_ylabel('gamma')
-ax1.set_zlabel('Test Precision')
+ax1.set_zlabel('F1 Precision')
 
 fig2 = plt.figure()
 ax2 = fig2.gca(projection='3d')
-ax2.scatter(sigmoid['C'], sigmoid['gamma'], sigmoid['train_precision'], label='Train Precision')
-ax2.scatter (sigmoid['C'], sigmoid['gamma'], sigmoid['test_precision'], label='Test Precision')
+ax2.scatter(sigmoid['C'], sigmoid['gamma'], sigmoid['f1_train'], label='Train f1')
+ax2.scatter (sigmoid['C'], sigmoid['gamma'], sigmoid['f1_test'], label='Test f1')
 ax2.legend()
 ax2.set_title("Sigmoid Kernel")
 ax2.set_xlabel('C')
 ax2.set_ylabel('gamma')
-ax2.set_zlabel('Test Precision')
+ax2.set_zlabel('F1')
 
 plt.show()
