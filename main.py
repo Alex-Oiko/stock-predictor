@@ -87,16 +87,4 @@ seeds = range(10,100,10)
 
 #results.to_csv('./resources/results.csv', sep=',')
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=12, shuffle=True, stratify=y)
-clf = svm.SVC(kernel='rbf',C=4,gamma=1)
-clf.fit(X_train, y_train)
-
-train_pred = clf.predict(X_train)
-test_pred = clf.predict(X_test)
-
-train_precision, train_recall = product_metrics(y_train, train_pred)
-test_precision, test_recall = product_metrics(y_test, test_pred)
-
-print(train_precision,train_recall)
-print(test_precision,test_precision)
 
