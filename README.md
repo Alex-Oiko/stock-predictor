@@ -14,8 +14,8 @@ when a company overperforms and when a company underperforms and train our model
 The loss function is the standard loss function of the svm, which is going to be the main driver of this research
 
 The train data is going to be from the 2017 fiscal year as well as the status (overperformance/underperformance).
-Once the model is trained, the 2018 fiscal year performance is going to be predicted from the model and measured against the real status
-of the 2018 performance.
+
+We will use f1 score as the performance measure.
 
 3. Data sources.
 
@@ -29,9 +29,8 @@ have the highest availability from bloomberg for the selected companies.
 
 5. Naive method.
 
-Predicting happy sentiment every time.
-
-Predicting one status every time
+Random selection.
+OLS
 
 6. Machine learning methods
 Regression
